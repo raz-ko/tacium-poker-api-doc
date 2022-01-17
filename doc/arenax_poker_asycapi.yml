@@ -1,0 +1,547 @@
+asyncapi: 2.2.0
+info:
+  title: ArenaX Poker API
+  version: '1.0.0'
+  description: The communication betweeen ArenaX Poker Clinet and ArenaX Poker Server.
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+servers:
+  game:
+    url: 'TBD/game/ws/'
+    protocol: ws
+    description: Connection with the game emulator
+  dev:
+    url: 'TBD/dev/ws/'
+    protocol: ws
+    description: Connection with the development API
+  test:
+    url: 'TBD/test/ws/'
+    protocol: ws
+    description: Connection with the test API
+defaultContentType: application/json
+channels:
+  test:
+    description: The test channel.
+    publish:
+      summary: Test publish messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/Ping'
+    subscribe:
+      summary: Test subscribe messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/Pong'
+  login:
+    description: The login channel.
+    publish:
+      summary: Login publish messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/Login'
+    subscribe:
+      summary: Login subscribe messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/LoginStatus'
+  state:
+    description: The state channel.
+    publish:
+      summary: State publish messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/SyncState'
+    subscribe:
+      summary: State subscribe messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/State'
+  hero:
+    description: The hero channel.
+    publish:
+      summary: Hero publish messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/RequestTime'
+          - $ref: '#/components/messages/HeroAction'
+  dev:
+    servers:
+      - dev
+    description: The dev channel.
+    publish:
+      summary: Dev publish messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/Restart'
+          - $ref: '#/components/messages/Replay'
+
+
+components:
+  schemas:
+    State:
+      type: object
+      properties:
+        game:
+          $ref: '#/components/schemas/Game'
+        scene:
+          $ref: '#/components/schemas/Scene'
+        players_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerInfo'
+        players_state:
+          $ref: '#/components/schemas/PlayersState'
+        cards:
+          $ref: '#/components/schemas/Cards'
+        chips:
+          $ref: '#/components/schemas/Chips'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerAction'
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerReaction'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        hero:
+          $ref: '#/components/schemas/Hero'
+    Game:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Game ID.
+          example: games/12345678
+        max_players:
+          type: integer
+          description: Max number of players on the table.
+          example: 4
+        small_blind:
+          type: number
+          description: The small blind amount.
+          example: 100
+        big_blind:
+          type: number
+          description: The big blind amount.
+          example: 200
+        button_seat:
+          $ref: '#/components/schemas/Seat'
+        hero_seat:
+          $ref: '#/components/schemas/Seat'
+    Scene:
+      type: object
+      properties:
+        background:
+          type: string
+          description: Scene background ID.
+          example: scenes/12345678
+        table:
+          type: string
+          description: Scene table ID.
+          example: tables/12345678
+        deck:
+          type: string
+          description: Scene cards deck ID.
+          example: decks/12345678
+    PlayerInfo:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        name:
+          type: string
+          description: Player's name
+          example: John
+        avatar:
+          type: string
+          description: Player's avatar ID.
+          example: avatars/12345678
+        cerebo:
+          type: string
+          description: Player's cerebo ID.
+          example: cerebos/12345678
+    PlayersState:
+      type: object
+      properties:
+        next_player:
+          $ref: '#/components/schemas/NextPlayer'
+        state:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerState'
+    PlayerState:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        active:
+          type: boolean
+          description: Whether the player is active
+    Cards:
+      type: object
+      properties:
+        public:
+          type: object
+          properties:
+            flop:
+              type: array
+              items:
+                $ref: '#/components/schemas/Card'
+              example:
+                - As
+                - Ks
+                - Qs
+            turn:
+              type: array
+              items:
+                $ref: '#/components/schemas/Card'
+              example:
+                - Js
+            river:
+              type: array
+              items:
+                $ref: '#/components/schemas/Card'
+              example:
+                - Ts
+        private:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerCards'
+    PlayerCards:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+          example:
+            - 2h
+            - 7d
+    Card:
+      type: string
+      description: >-
+        2 characters string representing a card.
+        Each card is composed of a Rank [23456789JTQKA] and a Suit [shdc].
+        Examples:
+         - 'As' is Ace pf spades.
+         - '8h' is the Eight of hearts.
+
+        A unique card is '--' which represents the card's back (a hidden card).
+
+        An empty string, or null card, means no card.
+      example: As
+    Chips:
+      type: object
+      properties:
+        pot:
+          $ref: '#/components/schemas/ChipsSum'
+          description: the main pot size
+          example: 120
+        side_pots:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChipsSum'
+            description: a side pot
+            example: 40
+        table_sum:
+          $ref: '#/components/schemas/ChipsSum'
+          description: the main pot size
+          example: 30
+        stacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerStack'
+        wagers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerStack'
+        collects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Collect'
+    PlayerStack:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        sum:
+          $ref: '#/components/schemas/ChipsSum'
+          description: the main pot size
+          example: 100
+    Collect:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        sum:
+          $ref: '#/components/schemas/ChipsSum'
+          description: the main pot size
+          example: 100
+        collect_type:
+          type: string
+          enum:
+            - win
+            - split_win
+            - side_pot
+            - split_side_pot
+            - uncalled_bet
+    PlayerAction:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        action:
+          $ref: '#/components/schemas/Action'
+    Action:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ActionType'
+        sum:
+          $ref: '#/components/schemas/ChipsSum'
+        fold:
+          type: boolean
+        allin:
+          type: boolean
+    ActionType:
+      type: string
+      enum:
+        - Raise
+        - Call
+        - Fold
+        - Check
+        - Bet
+    PlayerReaction:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+        reaction:
+          $ref: '#/components/schemas/Reaction'
+    Reaction:
+      type: string
+      enum:
+        - Win
+        - Lose
+        - Bored
+        - Think
+        - Happy
+        - Sad
+        - Angry
+        - Surprised
+        - Swag
+        - Wink
+        - Etc
+    Event:
+      type: string
+      enum:
+        - NewGame
+        - CardsDealt
+        - FlopDealt
+        - TurnDealt
+        - RiverDealt
+        - PlayerActed
+        - HeroTurnToPlay
+        - Showdown
+        - Collect
+        - GameOver
+    NextPlayer:
+      type: object
+      properties:
+        seat:
+          $ref: '#/components/schemas/Seat'
+          description: next player seat
+        time:
+          type: integer
+          description: remaining time for next player to play in seconds
+          example: 5
+    Hero:
+      type: object
+      properties:
+        time:
+          type: integer
+          description: remaining time for hero to play in seconds
+          example: 5
+        allowed_actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeroAllowedAction'
+        suggested_action:
+          $ref: '#/components/schemas/HeroAction'
+    HeroAllowedAction:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ActionType'
+        default_sum:
+          $ref: '#/components/schemas/ChipsSum'
+        min_sum:
+          $ref: '#/components/schemas/ChipsSum'
+        max_sum:
+          $ref: '#/components/schemas/ChipsSum'
+    HeroAction:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ActionType'
+        sum:
+          $ref: '#/components/schemas/ChipsSum'
+    Seat:
+      type: integer
+      description: >-
+        A number that indicates the players seat on the table.
+         - 0 - no seat
+         - 1 - left most seat
+         - 2 - the seat to the right of seat 1
+         - etc.
+      example: 3
+    ChipsSum:
+      type: number
+      description: amount of chips
+      example: 100
+  messages:
+    Ping:
+      name: Ping
+      summary: Pings the server
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - ping
+          data:
+            type: object
+    Pong:
+      name: Pong
+      summary: Pong response to client's Ping
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - pong
+          data:
+            type: object
+    Login:
+      name: Login
+      summary: Login request
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - login
+          data:
+            type: object
+            properties:
+              token:
+                type: string
+                description: an authentication JWT token
+    LoginStatus:
+      name: Login status
+      summary: Login status
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - login_status
+          data:
+            type: object
+            properties:
+              logged_in:
+                type: boolean
+                description: whether the user is logged in
+              account:
+                type: string
+                description: the account id
+    SyncState:
+      name: Sync state
+      summary: Requests the server to synchronize state
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - sync_state
+          data:
+            type: object
+    State:
+      name: State
+      summary: Sends current state to the client
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - state
+          data:
+            $ref: '#/components/schemas/State'
+    RequestTime:
+      name: Request time
+      summary: Request more time for hero
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - request_time
+          data:
+            type: object
+    HeroAction:
+      name: Hero action
+      summary: Hero performs action in the game
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - hero_action
+          data:
+            type: object
+            properties:
+              action:
+                $ref: '#/components/schemas/HeroAction'
+    Restart:
+      name: Restart
+      summary: Restarts the current game
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - restart
+          data:
+            type: object
+    Replay:
+      name: Replay
+      summary: Replays a specific game
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - replay
+          data:
+            type: object
+            properties:
+              game_id:
+                type: string
+                description: the replayed game ID.
