@@ -1,5 +1,5 @@
-# arenax-poker-api-doc
-ArenaX Poker API Documentation.
+# tacium-poker-api-doc
+Tacium Poker API Documentation.
 
 ## Format
 The documentation is done using AsyncAPI format https://www.asyncapi.com
@@ -12,7 +12,7 @@ npm install -g @asyncapi/generator
 ```
 ### Generation
 ```shell
-ag doc/arenax_poker_asycapi.yml @asyncapi/html-template -o dist
+ag doc/tacium_poker_asycapi.yml @asyncapi/html-template -o dist
 ```
 more info can be found at https://www.asyncapi.com/tools/generator
 
