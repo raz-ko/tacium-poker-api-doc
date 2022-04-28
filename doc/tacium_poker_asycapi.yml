@@ -172,6 +172,9 @@ components:
       properties:
         next_player:
           $ref: '#/components/schemas/NextPlayer'
+        villain:
+          $ref: '#/components/schemas/Seat'
+          description: villain seat
         state:
           type: array
           items:
