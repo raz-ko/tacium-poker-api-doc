@@ -7,18 +7,14 @@ info:
     name: Apache 2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
 servers:
-  game:
-    url: 'TBD/game/ws/'
+  play:
+    url: 'TBD/ws/player'
     protocol: ws
     description: Connection with the game emulator
-  dev:
-    url: 'TBD/dev/ws/'
+  watch:
+    url: 'TBD/ws/table?id=1'
     protocol: ws
     description: Connection with the development API
-  test:
-    url: 'TBD/test/ws/'
-    protocol: ws
-    description: Connection with the test API
 defaultContentType: application/json
 channels:
   test:
@@ -68,8 +64,6 @@ channels:
           - $ref: '#/components/messages/RequestTime'
           - $ref: '#/components/messages/HeroAction'
   dev:
-    servers:
-      - dev
     description: The dev channel.
     publish:
       summary: Dev publish messages
