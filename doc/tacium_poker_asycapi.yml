@@ -40,11 +40,13 @@ channels:
       message:
         oneOf:
           - $ref: '#/components/messages/Login'
+          - $ref: '#/components/messages/Guest'
     subscribe:
       summary: Login subscribe messages
       message:
         oneOf:
           - $ref: '#/components/messages/LoginStatus'
+          - $ref: '#/components/messages/GuestStatus'
   state:
     description: The state channel.
     publish:
@@ -466,6 +468,41 @@ components:
               account:
                 type: string
                 description: the account id
+    Guest:
+      name: Guest
+      summary: Guest request
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - guest
+          data:
+            type: object
+            properties:
+              daemon:
+                type: boolean
+                description: whether the guest should remain active after the user logout
+    GuestStatus:
+      name: Guest status
+      summary: Guest status
+      payload:
+        type: object
+        properties:
+          msg:
+            type: string
+            enum:
+              - guest_status
+          data:
+            type: object
+            properties:
+              logged_in:
+                type: boolean
+                description: whether the user is logged in
+              daemon:
+                type: boolean
+                description: whether the guest is daemon
     SyncState:
       name: Sync state
       summary: Requests the server to synchronize state
